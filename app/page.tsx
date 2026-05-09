@@ -71,7 +71,7 @@ export default function Home() {
             const cor = item.treino ? FICHA_TREINO[item.treino].cor : item.tipo === 'pilates' ? '#EF9F27' : '#333'
             return (
               <div key={idx} className="flex flex-col items-center gap-1.5">
-                <span className={`text-[10px] ${isHoje ? 'text-white font-medium' : 'text-white/30'}`}>{item.dia}</span>
+                <span className={`text-[10px] ${isHoje ? 'text-white font-medium' : 'text-white/30'}`}>{item.label}</span>
                 <div className="w-7 h-7 rounded-lg flex items-center justify-center text-[10px] font-bold"
                   style={{ background: isHoje ? cor : cor + '33', color: isHoje ? '#fff' : cor }}>
                   {item.treino || (item.tipo === 'pilates' ? 'P' : '—')}
