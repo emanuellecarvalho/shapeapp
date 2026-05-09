@@ -1,126 +1,414 @@
-export const FICHA_TREINO = {
-  A: {
-    nome: 'Peito + Bíceps',
-    dia: 'Segunda',
-    duracao: 45,
-    cor: '#7F77DD',
-    aquecimento: 'Prancha frontal 20s + prancha lateral 20s cada lado — 2 rounds',
-    exercicios: [
-      { nome: 'Supino guiado (máquina)', series: 3, reps: 12, descanso: 75, foco: 'Descida 3s, aperte 1s no topo. Pés firmes, lombar não arqueia' },
-      { nome: 'Supino inclinado barra', series: 3, reps: 12, descanso: 75, foco: 'Escápulas retraídas. Não force lombar para cima' },
-      { nome: 'Crucifixo c/ halteres', series: 3, reps: 15, descanso: 60, foco: 'Arco leve, pico de contração no topo, descida 3s' },
-      { nome: 'Rosca direta no cross', series: 3, reps: 15, descanso: 60, foco: 'Supine o punho no topo, segure 1s. Core contraído' },
-      { nome: 'Rosca martelo c/ halteres', series: 3, reps: 15, descanso: 60, foco: 'Cotovelo fixo, descida 3s. Preferencialmente sentada' },
-    ]
-  },
-  B: {
-    nome: 'MMII — Quadríceps',
-    dia: 'Terça',
-    duracao: 50,
-    cor: '#1D9E75',
-    aquecimento: 'Ponte de glúteo 15 reps + abdução deitada c/ elástico 15 reps cada lado',
-    exercicios: [
-      { nome: 'Leg press 45°', series: 4, reps: 12, descanso: 75, foco: 'Lombar colada no banco, não trave joelho. Principal composto' },
-      { nome: 'Hack machine', series: 3, reps: 12, descanso: 75, foco: 'Joelho alinhado com dedão, desça até 90°. Lombar apoiada' },
-      { nome: 'Cadeira extensora unilateral', series: 3, reps: 12, descanso: 60, foco: 'Segure 2s no topo — pico de contração no quadríceps' },
-      { nome: 'Agachamento sumô c/ halter', series: 3, reps: 15, descanso: 60, foco: 'Halter entre as pernas, pés abertos. Monitorar lombar' },
-      { nome: 'Cadeira adutora', series: 3, reps: 20, descanso: 45, foco: 'Controle a volta, não bata a carga' },
-    ]
-  },
-  C: {
-    nome: 'Dorsal + Ombro + Tríceps',
-    dia: 'Quinta',
-    duracao: 48,
-    cor: '#D85A30',
-    aquecimento: 'Prancha frontal 20s + prancha lateral 20s cada lado — 2 rounds',
-    exercicios: [
-      { nome: 'Puxada alta aberta anatômica', series: 3, reps: 15, descanso: 75, foco: 'Puxe até o queixo, retrai escápula. Tronco estável' },
-      { nome: 'Remada na máquina sentada', series: 3, reps: 15, descanso: 75, foco: 'Peito no apoio, puxe cotovelo para trás. Sem flexão de tronco' },
-      { nome: 'Puxada alta articulada', series: 3, reps: 15, descanso: 75, foco: 'Sinta o dorsal, não o bíceps. Tronco estável' },
-      { nome: 'Face pull no cross', series: 3, reps: 15, descanso: 60, foco: 'Até altura dos olhos, abra cotovelos. Corrige postura' },
-      { nome: 'Elevação lateral c/ halteres', series: 3, reps: 15, descanso: 60, foco: 'Sentada — elimina compensação lombar' },
-      { nome: 'Tríceps pulley pronado + supinado', series: 3, reps: 15, descanso: 60, foco: 'Cotovelo fixo, estenda completamente' },
-      { nome: 'Tríceps banco', series: 3, reps: 15, descanso: 60, foco: 'Desça até 90° no cotovelo, não arqueie a lombar' },
-    ]
-  },
-  D: {
-    nome: 'MMII — Posterior + Glúteo',
-    dia: 'Sábado',
-    duracao: 50,
-    cor: '#D4537E',
-    aquecimento: 'Ponte de glúteo 15 reps + abdução deitada c/ elástico 15 reps cada lado',
-    exercicios: [
-      { nome: 'Elevação pélvica máquina', series: 4, reps: 15, descanso: 60, foco: 'Aperte glúteo no topo, segure 2s. Sem hiperextender lombar' },
-      { nome: 'Leg press 45° c/ pés altos', series: 3, reps: 12, descanso: 75, foco: 'Pés no alto da plataforma — foco glúteo e posterior' },
-      { nome: 'Cadeira flexora', series: 4, reps: 15, descanso: 60, foco: 'Segure 1s no final, descida 3s' },
-      { nome: 'Stiff c/ halteres', series: 3, reps: 12, descanso: 75, foco: 'Quadril para trás, costas neutras. Pare se sentir pressão lombar' },
-      { nome: 'Cadeira abdutora', series: 3, reps: 20, descanso: 45, foco: 'Segure 1s no final, controle a volta' },
-      { nome: 'Panturrilha sentada', series: 3, reps: 17, descanso: 45, foco: 'Amplitude total — calcanhar abaixo da plataforma' },
-    ]
-  }
+// lib/dados.ts
+
+export type TreinoKey = 'A' | 'B' | 'C' | 'D'
+
+export type Serie = {
+  reps: number
+  carga: number
+  feito: boolean
 }
 
-export type TreinoKey = keyof typeof FICHA_TREINO
+export type Exercicio = {
+  nome: string
+  series: number
+  reps: number          // reps alvo (usado como placeholder nos inputs)
+  repsMin: number
+  repsMax: number
+  descanso: number      // segundos
+  foco: string          // dica de execução (ex.foco já usado na page)
+  prioridade?: boolean
+  alerta?: 'safe' | 'caution'
+  imagemUrl: string     // gif/imagem demonstrando o exercício
+}
 
-export const SEMANA = [
-  { dia: 'Seg', treino: 'A' as TreinoKey, tipo: 'musculacao' },
-  { dia: 'Ter', treino: 'B' as TreinoKey, tipo: 'musculacao' },
-  { dia: 'Qua', treino: null, tipo: 'pilates' },
-  { dia: 'Qui', treino: 'C' as TreinoKey, tipo: 'musculacao' },
-  { dia: 'Sex', treino: null, tipo: 'pilates' },
-  { dia: 'Sáb', treino: 'D' as TreinoKey, tipo: 'musculacao' },
-  { dia: 'Dom', treino: null, tipo: 'descanso' },
+export type Treino = {
+  nome: string
+  dia: string
+  duracao: number
+  aquecimento: string
+  cor: string           // hex — já usado inline na page
+  exercicios: Exercicio[]
+}
+
+
+// ─── Ficha de Treino ─────────────────────────────────────────────────────────
+export const FICHA_TREINO: Record<TreinoKey, Treino> = {
+
+  // ── TREINO A — Glúteo Máximo + Posterior ──────────────────────────────────
+  A: {
+    nome: 'MMII — Glúteo + Posterior',
+    dia: 'Segunda',
+    duracao: 50,
+    aquecimento: 'Ponte de glúteo 15 reps + abdução deitada c/ elástico 15 reps cada lado',
+    cor: '#c8503a',
+    exercicios: [
+      {
+        nome: 'Hip Thrust',
+        series: 4,
+        reps: 12,
+        repsMin: 10,
+        repsMax: 12,
+        descanso: 90,
+        foco: 'Banco no omoplata. Queixo pra baixo. Squeeze de 1s no topo. Movimento vem do quadril — não hiperestende a lombar.',
+        prioridade: true,
+        alerta: 'safe',
+        imagemUrl: '/exercises/hip-thrust.gif',
+      },
+      {
+        nome: 'Terra Romeno c/ halteres (RDL)',
+        series: 4,
+        reps: 10,
+        repsMin: 10,
+        repsMax: 12,
+        descanso: 90,
+        foco: 'Coluna neutra o tempo todo. Desce até sentir o posterior esticar. Nunca curva a lombar. Começa mais leve do que parece.',
+        prioridade: true,
+        alerta: 'caution',
+        imagemUrl: '/exercises/rdl-halteres.gif',
+      },
+      {
+        nome: 'Leg Curl (Cadeira Flexora)',
+        series: 3,
+        reps: 12,
+        repsMin: 12,
+        repsMax: 15,
+        descanso: 75,
+        foco: 'Joelhos levemente além da borda. Puxa até 90°. Descida controlada em 2–3s.',
+        alerta: 'safe',
+        imagemUrl: '/exercises/leg-curl.gif',
+      },
+      {
+        nome: 'Glute Kickback — máquina ou cabo',
+        series: 3,
+        reps: 15,
+        repsMin: 15,
+        repsMax: 20,
+        descanso: 60,
+        foco: 'Quadril estável, não rotaciona. Movimento vem do glúteo. Se sentir a lombar compensando, reduz amplitude.',
+        prioridade: true,
+        alerta: 'safe',
+        imagemUrl: '/exercises/glute-kickback.gif',
+      },
+      {
+        nome: 'Abdução — cabo ou máquina',
+        series: 3,
+        reps: 20,
+        repsMin: 20,
+        repsMax: 20,
+        descanso: 60,
+        foco: 'Movimento lateral controlado. Não balança o tronco. Glúteo médio define o shape lateral do quadril.',
+        alerta: 'safe',
+        imagemUrl: '/exercises/abducao-cabo.gif',
+      },
+      {
+        nome: 'Panturrilha na máquina',
+        series: 4,
+        reps: 15,
+        repsMin: 15,
+        repsMax: 20,
+        descanso: 45,
+        foco: 'Amplitude completa — calcanhar abaixo da plataforma na descida. Pausa de 1s no topo.',
+        alerta: 'safe',
+        imagemUrl: '/exercises/panturrilha-maquina.gif',
+      },
+    ],
+  },
+
+  // ── TREINO B — Quadríceps + Adutora + Glúteo ──────────────────────────────
+  B: {
+    nome: 'MMII — Quadríceps + Adutora',
+    dia: 'Quarta',
+    duracao: 45,
+    aquecimento: 'Bicicleta ergométrica 5 min leve + mobilidade de quadril 2 min',
+    cor: '#c07830',
+    exercicios: [
+      {
+        nome: 'Leg Press 45° — pés altos e largos',
+        series: 4,
+        reps: 12,
+        repsMin: 10,
+        repsMax: 12,
+        descanso: 90,
+        foco: 'Pés na parte superior da plataforma, abertura maior que ombros. Desce até 90°. Quadril não sai da plataforma.',
+        prioridade: true,
+        alerta: 'safe',
+        imagemUrl: '/exercises/leg-press.gif',
+      },
+      {
+        nome: 'Hack Squat ou Agachamento Smith',
+        series: 3,
+        reps: 12,
+        repsMin: 12,
+        repsMax: 12,
+        descanso: 90,
+        foco: 'No Smith, pés levemente à frente do eixo do quadril. Barra guiada elimina instabilidade que sobrecarrega a lombar.',
+        alerta: 'caution',
+        imagemUrl: '/exercises/hack-squat.gif',
+      },
+      {
+        nome: 'Cadeira Extensora (Leg Extension)',
+        series: 3,
+        reps: 15,
+        repsMin: 15,
+        repsMax: 15,
+        descanso: 60,
+        foco: 'Joelho alinhado com o eixo da máquina. Extensão completa, pausa 1s no topo. Sem impulso.',
+        alerta: 'safe',
+        imagemUrl: '/exercises/leg-extension.gif',
+      },
+      {
+        nome: 'Cadeira Adutora',
+        series: 3,
+        reps: 20,
+        repsMin: 20,
+        repsMax: 20,
+        descanso: 45,
+        foco: 'Fecha lento (2s), abre mais lento ainda (3s). Responde a volume e tempo sob tensão, não a carga alta.',
+        alerta: 'safe',
+        imagemUrl: '/exercises/adutora.gif',
+      },
+      {
+        nome: 'Afundo Reverso c/ halteres',
+        series: 3,
+        reps: 12,
+        repsMin: 12,
+        repsMax: 12,
+        descanso: 75,
+        foco: 'Passo para trás, joelho traseiro quase no chão. Tronco levemente inclinado à frente para recrutar mais glúteo. Core ativo.',
+        alerta: 'caution',
+        imagemUrl: '/exercises/afundo-reverso.gif',
+      },
+    ],
+  },
+
+  // ── TREINO C — Costas + Bíceps ─────────────────────────────────────────────
+  C: {
+    nome: 'MMSS — Costas + Bíceps',
+    dia: 'Quinta',
+    duracao: 45,
+    aquecimento: 'Remada leve no cabo 2×15 + rotação de ombro com elástico',
+    cor: '#3a7a50',
+    exercicios: [
+      {
+        nome: 'Puxada Frontal (Lat Pulldown)',
+        series: 4,
+        reps: 12,
+        repsMin: 10,
+        repsMax: 12,
+        descanso: 90,
+        foco: 'Pegada um pouco mais larga que os ombros. Puxa para o queixo, cotovelos apontam para o chão. Não joga o tronco para trás.',
+        alerta: 'safe',
+        imagemUrl: '/exercises/puxada-frontal.gif',
+      },
+      {
+        nome: 'Remada Sentada na Polia',
+        series: 4,
+        reps: 12,
+        repsMin: 12,
+        repsMax: 12,
+        descanso: 90,
+        foco: 'Coluna ereta, não curva a lombar para alcançar mais. Puxa até o abdômen, espreme escápulas por 1s.',
+        alerta: 'safe',
+        imagemUrl: '/exercises/remada-sentada.gif',
+      },
+      {
+        nome: 'Remada Unilateral c/ halter no banco',
+        series: 3,
+        reps: 12,
+        repsMin: 12,
+        repsMax: 12,
+        descanso: 75,
+        foco: 'Joelho e mão apoiados no banco. Costas paralelas ao chão, coluna neutra. O apoio descarga completamente a lombar.',
+        alerta: 'safe',
+        imagemUrl: '/exercises/remada-unilateral.gif',
+      },
+      {
+        nome: 'Face Pull no cabo',
+        series: 3,
+        reps: 15,
+        repsMin: 15,
+        repsMax: 15,
+        descanso: 60,
+        foco: 'Corda na altura do rosto. Puxa para a testa, cotovelos para cima e para fora. Essencial para saúde do ombro e postura.',
+        alerta: 'safe',
+        imagemUrl: '/exercises/face-pull.gif',
+      },
+      {
+        nome: 'Rosca Direta c/ halteres',
+        series: 3,
+        reps: 12,
+        repsMin: 12,
+        repsMax: 12,
+        descanso: 60,
+        foco: 'Cotovelos fixos ao lado do tronco. Supina o punho no topo. Descida em 3s. Se balança o corpo, o peso está pesado.',
+        alerta: 'safe',
+        imagemUrl: '/exercises/rosca-direta.gif',
+      },
+      {
+        nome: 'Rosca Martelo',
+        series: 3,
+        reps: 12,
+        repsMin: 12,
+        repsMax: 12,
+        descanso: 60,
+        foco: 'Pegada neutra (polegar para cima). Trabalha braquial e braquiorradial além do bíceps. Alternado ou simultâneo.',
+        alerta: 'safe',
+        imagemUrl: '/exercises/rosca-martelo.gif',
+      },
+    ],
+  },
+
+  // ── TREINO D — Ombro + Tríceps + Core ─────────────────────────────────────
+  D: {
+    nome: 'MMSS — Ombro + Tríceps + Core',
+    dia: 'Sábado',
+    duracao: 45,
+    aquecimento: 'Rotação externa com elástico 2×15 + elevação lateral leve 1×20',
+    cor: '#7F77DD',
+    exercicios: [
+      {
+        nome: 'Desenvolvimento c/ halteres — sentada',
+        series: 4,
+        reps: 12,
+        repsMin: 12,
+        repsMax: 12,
+        descanso: 90,
+        foco: 'Encosto a 90°. Halteres na altura dos ombros, cotovelos a 90°. Não arqueia a lombar — se acontecer, o peso está pesado.',
+        alerta: 'caution',
+        imagemUrl: '/exercises/desenvolvimento-ombro.gif',
+      },
+      {
+        nome: 'Elevação Lateral c/ halteres',
+        series: 4,
+        reps: 15,
+        repsMin: 15,
+        repsMax: 15,
+        descanso: 75,
+        foco: 'Cotovelo levemente dobrado, eleva até a altura do ombro. Descida lenta em 3s. Peso menor do que parece. Define a largura do ombro.',
+        alerta: 'safe',
+        imagemUrl: '/exercises/elevacao-lateral.gif',
+      },
+      {
+        nome: 'Elevação Frontal Alternada c/ halter',
+        series: 3,
+        reps: 12,
+        repsMin: 12,
+        repsMax: 12,
+        descanso: 60,
+        foco: 'Eleva um braço de cada vez até a altura dos ombros. Palma para baixo. Sem impulso.',
+        alerta: 'safe',
+        imagemUrl: '/exercises/elevacao-frontal.gif',
+      },
+      {
+        nome: 'Tríceps Polia (Pushdown) — corda',
+        series: 3,
+        reps: 15,
+        repsMin: 15,
+        repsMax: 15,
+        descanso: 60,
+        foco: 'Cotovelos fixos ao lado do tronco. Estende completamente, separa a corda no final. Não deixa os cotovelos subirem.',
+        alerta: 'safe',
+        imagemUrl: '/exercises/triceps-polia.gif',
+      },
+      {
+        nome: 'Tríceps Testa c/ halteres (Skull Crusher)',
+        series: 3,
+        reps: 12,
+        repsMin: 12,
+        repsMax: 12,
+        descanso: 60,
+        foco: 'Deitada no banco. Abaixa em direção à testa dobrando os cotovelos. Cotovelos apontam para o teto. Começa leve.',
+        alerta: 'safe',
+        imagemUrl: '/exercises/triceps-testa.gif',
+      },
+      {
+        nome: 'Dead Bug',
+        series: 3,
+        reps: 10,
+        repsMin: 8,
+        repsMax: 10,
+        descanso: 60,
+        foco: 'Deitada, braços e pernas a 90°. Estende braço + perna opostos mantendo lombar colada no chão. Exercício de core mais seguro para hérnia.',
+        alerta: 'safe',
+        imagemUrl: '/exercises/dead-bug.gif',
+      },
+    ],
+  },
+}
+
+// ─── Semana ───────────────────────────────────────────────────────────────────
+export type DiaSemana = {
+  label: string
+  treino: TreinoKey | null
+  tipo: 'treino' | 'pilates' | 'descanso'
+}
+
+export const SEMANA: DiaSemana[] = [
+  { label: 'Seg', treino: 'A',  tipo: 'treino'   },
+  { label: 'Ter', treino: null, tipo: 'pilates'  },
+  { label: 'Qua', treino: 'B',  tipo: 'treino'   },
+  { label: 'Qui', treino: 'C',  tipo: 'treino'   },
+  { label: 'Sex', treino: null, tipo: 'pilates'  },
+  { label: 'Sáb', treino: 'D',  tipo: 'treino'   },
+  { label: 'Dom', treino: null, tipo: 'descanso' },
 ]
 
-export const PLANO_ALIMENTAR = {
+// ─── Hidratação ───────────────────────────────────────────────────────────────
+// Meta diária de água em ml — usada em app/page.tsx e app/hidratacao/page.tsx
+export const META_HIDRATACAO_ML = 2800
+// ─── Plano Alimentar ─────────────────────────────────────────────────────────
+// Formato compatível com app/alimentacao/page.tsx
+// PLANO_ALIMENTAR é um Record<string, any> indexado pelo key da Refeicao
+
+export const PLANO_ALIMENTAR: Record<string, {
+  horario: string
+  meta_proteina: number
+  opcoes?: string[]
+  carb?: string[]
+  proteina?: string[]
+  legumes?: string
+  extra?: string
+}> = {
   cafe_manha: {
-    nome: 'Café da manhã — pós-treino',
-    horario: '6h–7h',
-    emoji: '☀️',
-    carb: ['2 fatias pão', 'tapioca 20g', 'aveia 20g', 'cuscuz 60g'],
-    proteina: ['2 ovos', 'whey 25g', 'frango desfiado 60g'],
-    gordura: ['queijo minas 30g', 'cottage 3 col. sopa', 'creme ricota 3 col. sopa'],
-    extra: 'Café + creatina 5g',
-    meta_proteina: 20,
+    horario: '07:00',
+    meta_proteina: 30,
+    proteina: ['3 ovos mexidos', '200g iogurte grego', '100g cottage'],
+    carb: ['2 fatias pão integral', '1 fruta média'],
+    extra: 'Café sem açúcar, quantidade livre',
   },
   lanche_manha: {
-    nome: 'Lanche da manhã',
-    horario: '9h–10h',
-    emoji: '🍎',
-    opcoes: ['nuts 20g + iogurte grego 170g', 'whey 25g + 1 fruta pequena', '2 ovos cozidos + 1 fruta pequena'],
-    meta_proteina: 20,
+    horario: '10:00',
+    meta_proteina: 15,
+    opcoes: [
+      '200g iogurte grego + punhado de castanhas',
+      '30g whey + 1 fruta',
+      '100g cottage + 1 fruta',
+    ],
   },
   almoco: {
-    nome: 'Almoço',
-    horario: '12h–13h',
-    emoji: '🍽️',
-    carb: ['arroz 90g', 'batata 90g', 'mandioquinha 90g', 'macarrão integral 90g'],
-    proteina: ['frango 150g', 'carne 150g', 'peixe 150g'],
-    legumes: 'abobrinha / brócolis / cenoura / couve-flor / vagem — 200g',
-    gordura: '1 col. chá azeite',
-    meta_proteina: 38,
+    horario: '13:00',
+    meta_proteina: 45,
+    proteina: ['150g frango grelhado', '150g peixe', '150g carne moída', '2 ovos + 100g atum'],
+    carb: ['150g arroz cozido', '200g batata-doce', '150g macarrão integral'],
+    legumes: 'Livre — brócolis, abobrinha, cenoura, pepino, tomate',
+    extra: 'Marmita batch cooking — montar na prep semanal',
   },
   lanche_tarde: {
-    nome: 'Lanche da tarde',
-    horario: '15h–16h',
-    emoji: '🥤',
+    horario: '16:30',
+    meta_proteina: 20,
     opcoes: [
-      'iogurte natural 170g + whey 25g + 1 fruta',
-      'iogurte natural 170g + whey 25g + aveia 1 col. sopa',
-      '100g açaí sem açúcar + whey 25g',
+      '30g whey + banana',
+      '100g atum + torrada integral',
+      '200g iogurte grego + mel',
+      '2 ovos cozidos + fruta',
     ],
-    meta_proteina: 22,
   },
   jantar: {
-    nome: 'Jantar',
-    horario: '19h–20h',
-    emoji: '🌙',
-    carb: '30–40g',
-    proteina: ['frango 150g', 'peixe 150g', 'carne 150g'],
-    legumes: '200g+',
-    extra: 'Chocolate 70% — 2 quadradinhos (2x/semana)',
-    meta_proteina: 38,
+    horario: '20:00',
+    meta_proteina: 40,
+    proteina: ['150g salmão', '150g frango', '150g carne', '3 ovos + 100g queijo'],
+    carb: ['100g arroz', '150g batata', 'Pode reduzir se não treinou'],
+    legumes: 'Livre — priorizar variedade e cor',
+    extra: 'Marmita de jantar — preparar junto no batch cooking',
   },
 }
-
-export const META_HIDRATACAO_ML = 2800

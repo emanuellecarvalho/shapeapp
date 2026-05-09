@@ -16,7 +16,7 @@ export default function Home() {
     <div className="px-4 pt-8 pb-4">
       <div className="mb-6">
         <p className="text-white/50 text-sm capitalize">{nomeDia}</p>
-        <h1 className="text-2xl font-semibold mt-1">Bom dia! 👋</h1>
+        <h1 className="text-2xl font-semibold mt-1">Olá, Manu! 👋</h1>
       </div>
 
       <p className="text-white/40 text-xs font-medium uppercase tracking-wider mb-2">Hoje</p>
