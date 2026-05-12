@@ -117,7 +117,7 @@ export const FICHA_TREINO: Record<TreinoKey, Treino> = {
   // ── TREINO B — Quadríceps + Adutora + Glúteo ──────────────────────────────
   B: {
     nome: 'MMII — Quadríceps + Adutora',
-    dia: 'Quarta',
+    dia: 'Terça',
     duracao: 45,
     aquecimento: 'Bicicleta ergométrica 5 min leve + mobilidade de quadril 2 min',
     cor: '#c07830',
@@ -345,8 +345,8 @@ export type DiaSemana = {
 
 export const SEMANA: DiaSemana[] = [
   { label: 'Seg', treino: 'A',  tipo: 'treino'   },
-  { label: 'Ter', treino: null, tipo: 'pilates'  },
-  { label: 'Qua', treino: 'B',  tipo: 'treino'   },
+  { label: 'Ter', treino: 'B',  tipo: 'treino'   },
+  { label: 'Qua', treino: null, tipo: 'pilates'  },
   { label: 'Qui', treino: 'C',  tipo: 'treino'   },
   { label: 'Sex', treino: null, tipo: 'pilates'  },
   { label: 'Sáb', treino: 'D',  tipo: 'treino'   },

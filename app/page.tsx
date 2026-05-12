@@ -12,6 +12,12 @@ export default function Home() {
   const nomeDia = hoje.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })
   const treinoHoje = diaHoje.treino ? FICHA_TREINO[diaHoje.treino] : null
 
+  const getDateForIdx = (idx: number) => {
+    const d = new Date(hoje)
+    d.setDate(d.getDate() + (idx - idxHoje))
+    return d.toISOString().split('T')[0]
+  }
+
   return (
     <div className="px-4 pt-8 pb-4">
       <div className="mb-6">
@@ -70,13 +76,14 @@ export default function Home() {
             const isHoje = idx === idxHoje
             const cor = item.treino ? FICHA_TREINO[item.treino].cor : item.tipo === 'pilates' ? '#EF9F27' : '#333'
             return (
-              <div key={idx} className="flex flex-col items-center gap-1.5">
+              <Link key={idx} href={`/dia/${getDateForIdx(idx)}`}
+                className="flex flex-col items-center gap-1.5 active:scale-90 transition-transform">
                 <span className={`text-[10px] ${isHoje ? 'text-white font-medium' : 'text-white/30'}`}>{item.label}</span>
                 <div className="w-7 h-7 rounded-lg flex items-center justify-center text-[10px] font-bold"
                   style={{ background: isHoje ? cor : cor + '33', color: isHoje ? '#fff' : cor }}>
                   {item.treino || (item.tipo === 'pilates' ? 'P' : '—')}
                 </div>
-              </div>
+              </Link>
             )
           })}
         </div>

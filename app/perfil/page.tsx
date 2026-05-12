@@ -1,269 +1,170 @@
 'use client'
-import { useState, useEffect, useRef } from 'react'
-import { FICHA_TREINO, SEMANA, type TreinoKey } from '@/lib/dados'
-import { supabase } from '@/lib/supabase'
-import { ChevronDown, ChevronUp, Check, Timer, Save, AlertTriangle, ShieldCheck } from 'lucide-react'
+import { useState } from 'react'
+import { FICHA_TREINO, SEMANA } from '@/lib/dados'
+import { User, Dumbbell, Apple, Moon, Activity, ChevronRight } from 'lucide-react'
 
-// ─── Tipos ────────────────────────────────────────────────────────────────────
-interface SerieState { reps: number; carga: number; feito: boolean }
-type CargasMap = Record<string, Record<number, SerieState>>
+const PERFIL = {
+  nome: 'Manu',
+  peso: '54,4 kg',
+  altura: '1,59 m',
+  objetivo: 'Hipertrofia — Glúteos + Corpo atlético',
+  nivel: 'Iniciante / Intermediária',
+  condicao: "Hérnia lombar (todas as L's)",
+}
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
-export default function TreinoPage() {
-  const hoje = new Date()
-  const diasMap = [6, 0, 1, 2, 3, 4, 5]
-  const idxHoje = diasMap[hoje.getDay()]
-  const diaHoje = SEMANA[idxHoje]
+const PILARES = [
+  {
+    icon: Dumbbell,
+    label: 'Treino',
+    cor: '#c8503a',
+    itens: [
+      'Musculação 4–5×/semana',
+      'Pilates 2×/semana',
+      'Divisão ABCD — lombar-segura',
+      'Sem cardio',
+    ],
+  },
+  {
+    icon: Apple,
+    label: 'Alimentação',
+    cor: '#3a7a50',
+    itens: [
+      'Batch cooking (almoço + jantar)',
+      'Foco em proteína',
+      'Sem contagem obsessiva',
+    ],
+  },
+  {
+    icon: Moon,
+    label: 'Sono & Recovery',
+    cor: '#7F77DD',
+    itens: [
+      'Sono como variável de performance',
+      'Recovery integrado ao treino',
+      'Pilates como mobilidade ativa',
+    ],
+  },
+  {
+    icon: Activity,
+    label: 'Marcadores',
+    cor: '#c07830',
+    itens: [
+      'Peso + medidas mensais',
+      'Fotos de progresso',
+      'Exames semestrais',
+      'Ferro, vitamina D, TSH',
+    ],
+  },
+]
 
-  const [treinoSelecionado, setTreinoSelecionado] = useState<TreinoKey>(
-    (diaHoje.treino as TreinoKey) || 'A'
-  )
-  const treino = FICHA_TREINO[treinoSelecionado]
-  const [expandido, setExpandido] = useState<number | null>(0)
-  const [cargas, setCargas] = useState<CargasMap>({})
-  const [timer, setTimer] = useState<number | null>(null)
-  const [timerAtivo, setTimerAtivo] = useState(false)
-  const [savedMsg, setSavedMsg] = useState(false)
-  const intervalRef = useRef<NodeJS.Timeout | null>(null)
+export default function PerfilPage() {
+  const [expandido, setExpandido] = useState<number | null>(null)
 
-  useEffect(() => {
-    if (timerAtivo && timer !== null && timer > 0) {
-      intervalRef.current = setInterval(() => setTimer(t => (t ?? 0) - 1), 1000)
-    } else {
-      if (intervalRef.current) clearInterval(intervalRef.current)
-      if (timer === 0) setTimerAtivo(false)
-    }
-    return () => { if (intervalRef.current) clearInterval(intervalRef.current) }
-  }, [timerAtivo, timer])
-
-  const iniciarTimer = (seg: number) => { setTimer(seg); setTimerAtivo(true) }
-
-  const setCarga = (
-    exNome: string,
-    serie: number,
-    campo: keyof SerieState,
-    valor: number | boolean
-  ) => {
-    setCargas(prev => ({
-      ...prev,
-      [exNome]: {
-        ...(prev[exNome] || {}),
-        [serie]: {
-          reps: prev[exNome]?.[serie]?.reps ?? 0,
-          carga: prev[exNome]?.[serie]?.carga ?? 0,
-          feito: prev[exNome]?.[serie]?.feito ?? false,
-          [campo]: valor,
-        },
-      },
-    }))
-    if (campo === 'feito' && valor === true) {
-      const ex = treino.exercicios.find(e => e.nome === exNome)
-      if (ex) iniciarTimer(ex.descanso)
-    }
-  }
-
-  const salvarTreino = async () => {
-    const exerciciosLog = treino.exercicios.map(ex => ({
-      nome: ex.nome,
-      series: Array.from({ length: ex.series }, (_, i) => ({
-        numero: i + 1,
-        reps: cargas[ex.nome]?.[i]?.reps || ex.reps,
-        carga_kg: cargas[ex.nome]?.[i]?.carga || 0,
-        executado: cargas[ex.nome]?.[i]?.feito || false,
-      })),
-    }))
-    await supabase.from('treinos_log').insert({
-      user_id: 'manu',
-      data: hoje.toISOString().split('T')[0],
-      treino_tipo: treinoSelecionado,
-      exercicios: exerciciosLog,
-      duracao_min: treino.duracao,
-    } as any)
-    setSavedMsg(true)
-    setTimeout(() => setSavedMsg(false), 2500)
-  }
-
-  const keys: TreinoKey[] = ['A', 'B', 'C', 'D']
+  const totalTreinos = SEMANA.filter(d => d.tipo === 'treino').length
+  const totalPilates = SEMANA.filter(d => d.tipo === 'pilates').length
 
   return (
-    <div className="px-4 pt-8 pb-4">
+    <div className="px-4 pt-8 pb-24">
 
       {/* Header */}
-      <div className="flex items-center justify-between mb-5">
-        <h1 className="text-xl font-semibold">Ficha de Treino</h1>
-        {timer !== null && (
-          <div
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
-              timerAtivo ? 'bg-[#7F77DD]/20 text-[#7F77DD]' : 'bg-white/10 text-white/40'
-            }`}
-          >
-            <Timer size={14} />
-            {String(Math.floor((timer || 0) / 60)).padStart(2, '0')}:
-            {String((timer || 0) % 60).padStart(2, '0')}
-          </div>
-        )}
-      </div>
-
-      {/* Tabs de treino */}
-      <div className="flex gap-2 mb-5 overflow-x-auto pb-1">
-        {keys.map(k => (
-          <button
-            key={k}
-            onClick={() => { setTreinoSelecionado(k); setExpandido(0); setCargas({}) }}
-            className="flex-shrink-0 px-4 py-2 rounded-xl text-sm font-medium border transition-all"
-            style={
-              treinoSelecionado === k
-                ? { background: FICHA_TREINO[k].cor, borderColor: FICHA_TREINO[k].cor, color: '#fff' }
-                : { background: 'transparent', borderColor: 'rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.5)' }
-            }
-          >
-            Treino {k}
-          </button>
-        ))}
-      </div>
-
-      {/* Info do treino */}
-      <div className="bg-[#1a1a1a] rounded-2xl p-4 border border-white/5 mb-4">
-        <p className="font-semibold" style={{ color: treino.cor }}>{treino.nome}</p>
-        <p className="text-white/40 text-xs mt-0.5">{treino.dia} · ~{treino.duracao} min</p>
-        <div className="mt-3 pt-3 border-t border-white/5">
-          <p className="text-white/30 text-xs font-medium uppercase tracking-wider mb-1">Aquecimento</p>
-          <p className="text-white/50 text-xs leading-relaxed">{treino.aquecimento}</p>
+      <div className="flex items-center gap-3 mb-6">
+        <div className="w-12 h-12 rounded-2xl bg-[#7F77DD]/20 flex items-center justify-center">
+          <User size={22} className="text-[#7F77DD]" />
+        </div>
+        <div>
+          <h1 className="text-xl font-semibold">{PERFIL.nome}</h1>
+          <p className="text-white/40 text-xs mt-0.5">{PERFIL.objetivo}</p>
         </div>
       </div>
 
-      {/* Lista de exercícios */}
-      <div className="space-y-2 mb-5">
-        {treino.exercicios.map((ex, idx) => {
-          const open = expandido === idx
-          const seriesFeitas = Object.values(cargas[ex.nome] || {}).filter(s => s.feito).length
+      {/* Stats rápidos */}
+      <div className="grid grid-cols-3 gap-2 mb-5">
+        <div className="bg-[#1a1a1a] rounded-2xl p-3 border border-white/5 text-center">
+          <p className="text-lg font-semibold text-white">{PERFIL.peso}</p>
+          <p className="text-white/30 text-[10px] uppercase tracking-wider mt-0.5">Peso</p>
+        </div>
+        <div className="bg-[#1a1a1a] rounded-2xl p-3 border border-white/5 text-center">
+          <p className="text-lg font-semibold text-white">{PERFIL.altura}</p>
+          <p className="text-white/30 text-[10px] uppercase tracking-wider mt-0.5">Altura</p>
+        </div>
+        <div className="bg-[#1a1a1a] rounded-2xl p-3 border border-white/5 text-center">
+          <p className="text-lg font-semibold text-white">{totalTreinos}+{totalPilates}</p>
+          <p className="text-white/30 text-[10px] uppercase tracking-wider mt-0.5">Treinos/sem</p>
+        </div>
+      </div>
 
+      {/* Semana visual */}
+      <div className="bg-[#1a1a1a] rounded-2xl p-4 border border-white/5 mb-5">
+        <p className="text-white/30 text-xs font-medium uppercase tracking-wider mb-3">Divisão semanal</p>
+        <div className="grid grid-cols-7 gap-1">
+          {SEMANA.map((dia, i) => {
+            const corMap: Record<string, string> = {
+              treino: FICHA_TREINO[dia.treino as keyof typeof FICHA_TREINO]?.cor ?? '#444',
+              pilates: '#6450a0',
+              descanso: '#2a2a2a',
+            }
+            const cor = corMap[dia.tipo ?? 'descanso'] ?? '#2a2a2a'
+            return (
+              <div key={i} className="flex flex-col items-center gap-1">
+                <span className="text-[9px] text-white/20 uppercase">{dia.label}</span>
+                <div
+                  className="w-full rounded-lg py-2 flex items-center justify-center"
+                  style={{ background: `${cor}22`, border: `1px solid ${cor}44` }}
+                >
+                  <span className="text-[9px] font-bold" style={{ color: cor }}>
+                    {dia.tipo === 'treino' ? dia.treino : dia.tipo === 'pilates' ? 'P' : '—'}
+                  </span>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+
+      {/* Condição especial */}
+      <div className="flex items-start gap-2 bg-amber-500/8 border border-amber-500/15 rounded-2xl px-4 py-3 mb-5">
+        <span className="text-amber-400 text-sm mt-0.5">⚠</span>
+        <div>
+          <p className="text-amber-400 text-xs font-medium mb-0.5">Condição monitorada</p>
+          <p className="text-amber-400/70 text-xs leading-relaxed">{PERFIL.condicao} — protocolo lombar-seguro ativo em todos os treinos.</p>
+        </div>
+      </div>
+
+      {/* Pilares */}
+      <p className="text-white/30 text-xs font-medium uppercase tracking-wider mb-3">Pilares do protocolo</p>
+      <div className="space-y-2">
+        {PILARES.map((pilar, i) => {
+          const Icon = pilar.icon
+          const open = expandido === i
           return (
-            <div
-              key={idx}
-              className="bg-[#1a1a1a] rounded-2xl border border-white/5 overflow-hidden"
-            >
-              {/* Cabeçalho do exercício */}
+            <div key={i} className="bg-[#1a1a1a] rounded-2xl border border-white/5 overflow-hidden">
               <button
                 className="w-full flex items-center justify-between p-4"
-                onClick={() => setExpandido(open ? null : idx)}
+                onClick={() => setExpandido(open ? null : i)}
               >
-                <div className="flex items-center gap-3 text-left min-w-0">
-                  <div className="w-7 h-7 rounded-lg bg-white/5 flex items-center justify-center text-xs font-bold text-white/40 flex-shrink-0">
-                    {idx + 1}
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-xl flex items-center justify-center"
+                    style={{ background: `${pilar.cor}20` }}>
+                    <Icon size={16} style={{ color: pilar.cor }} />
                   </div>
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-1.5">
-                      <p className="text-sm font-medium truncate">{ex.nome}</p>
-                      {ex.prioridade && (
-                        <span
-                          className="flex-shrink-0 text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded"
-                          style={{ background: `${treino.cor}25`, color: treino.cor }}
-                        >
-                          ★
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-white/40 text-xs">
-                      {ex.series}×{ex.reps} · {ex.descanso}s · {seriesFeitas}/{ex.series} ✓
-                    </p>
-                  </div>
+                  <span className="text-sm font-medium">{pilar.label}</span>
                 </div>
-                <div className="flex-shrink-0 ml-2">
-                  {open
-                    ? <ChevronUp size={16} className="text-white/30" />
-                    : <ChevronDown size={16} className="text-white/30" />
-                  }
-                </div>
+                <ChevronRight
+                  size={16}
+                  className="text-white/20 transition-transform"
+                  style={{ transform: open ? 'rotate(90deg)' : 'rotate(0deg)' }}
+                />
               </button>
-
-              {/* Conteúdo expandido */}
               {open && (
                 <div className="px-4 pb-4 border-t border-white/5">
-
-                  {/* GIF execução */}
-                  <div className="mt-3 mb-3">
-                    <p className="text-[9px] text-white/20 uppercase tracking-widest mb-1">Execução</p>
-                    <div className="rounded-xl overflow-hidden bg-[#111] flex items-center justify-center" style={{ height: 180, minHeight: 180 }}>
-                      {ex.imagemUrl ? (
-                        <img
-                          src={ex.imagemUrl}
-                          alt={ex.nome}
-                          style={{ height: '100%', width: 'auto', objectFit: 'contain', display: 'block' }}
-                          onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
-                        />
-                      ) : null}
-                    </div>
-                  </div>
-
-                  {/* Alerta lombar */}
-                  {ex.alerta === 'caution' && (
-                    <div className="flex items-start gap-2 bg-amber-500/8 border border-amber-500/15 rounded-xl px-3 py-2 mb-3">
-                      <AlertTriangle size={12} className="text-amber-400 mt-0.5 flex-shrink-0" />
-                      <p className="text-amber-400/80 text-[10px] leading-relaxed">
-                        Atenção lombar — inicia leve, monitora a forma antes de progredir carga.
-                      </p>
-                    </div>
-                  )}
-                  {ex.alerta === 'safe' && (
-                    <div className="flex items-start gap-2 bg-emerald-500/8 border border-emerald-500/15 rounded-xl px-3 py-2 mb-3">
-                      <ShieldCheck size={12} className="text-emerald-400 mt-0.5 flex-shrink-0" />
-                      <p className="text-emerald-400/80 text-[10px] leading-relaxed">
-                        Lombar-seguro — movimento controlado mantém a coluna protegida.
-                      </p>
-                    </div>
-                  )}
-
-                  {/* Dica de execução */}
-                  <p className="text-white/40 text-xs mb-3 italic leading-relaxed">{ex.foco}</p>
-
-                  {/* Séries */}
-                  <div className="space-y-2">
-                    {Array.from({ length: ex.series }, (_, i) => {
-                      const s = cargas[ex.nome]?.[i]
-                      return (
-                        <div
-                          key={i}
-                          className={`flex items-center gap-2 p-2.5 rounded-xl transition-colors ${
-                            s?.feito ? 'bg-[#1D9E75]/10' : 'bg-white/[0.03]'
-                          }`}
-                        >
-                          <span className="text-white/30 text-xs w-14 flex-shrink-0">Série {i + 1}</span>
-                          <div className="flex items-center gap-1">
-                            <input
-                              type="number"
-                              placeholder={String(ex.reps)}
-                              inputMode="numeric"
-                              className="w-14 bg-white/5 rounded-lg px-2 py-1.5 text-sm text-center border border-white/10 focus:outline-none focus:border-[#7F77DD]"
-                              value={s?.reps || ''}
-                              onChange={e => setCarga(ex.nome, i, 'reps', Number(e.target.value))}
-                            />
-                            <span className="text-white/20 text-xs">rep</span>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <input
-                              type="number"
-                              placeholder="0"
-                              step="0.5"
-                              inputMode="decimal"
-                              className="w-16 bg-white/5 rounded-lg px-2 py-1.5 text-sm text-center border border-white/10 focus:outline-none focus:border-[#7F77DD]"
-                              value={s?.carga || ''}
-                              onChange={e => setCarga(ex.nome, i, 'carga', Number(e.target.value))}
-                            />
-                            <span className="text-white/20 text-xs">kg</span>
-                          </div>
-                          <button
-                            onClick={() => setCarga(ex.nome, i, 'feito', !s?.feito)}
-                            className={`ml-auto w-8 h-8 rounded-lg flex items-center justify-center transition-all ${
-                              s?.feito ? 'bg-[#1D9E75]' : 'bg-white/10'
-                            }`}
-                          >
-                            <Check size={14} className={s?.feito ? 'text-white' : 'text-white/30'} />
-                          </button>
-                        </div>
-                      )
-                    })}
-                  </div>
+                  <ul className="mt-3 space-y-2">
+                    {pilar.itens.map((item, j) => (
+                      <li key={j} className="flex items-start gap-2 text-sm text-white/50">
+                        <span style={{ color: pilar.cor }} className="mt-0.5 text-xs">→</span>
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
                 </div>
               )}
             </div>
@@ -271,18 +172,14 @@ export default function TreinoPage() {
         })}
       </div>
 
-      {/* Botão salvar */}
-      <button
-        onClick={salvarTreino}
-        className={`w-full py-3.5 rounded-2xl font-medium flex items-center justify-center gap-2 transition-colors ${
-          savedMsg ? 'bg-[#1D9E75]' : 'bg-[#7F77DD]'
-        }`}
-      >
-        {savedMsg
-          ? <><Check size={18} /> Treino salvo!</>
-          : <><Save size={18} /> Salvar treino</>
-        }
-      </button>
+      {/* Filosofia */}
+      <div className="mt-5 bg-[#1a1a1a] rounded-2xl p-4 border border-white/5">
+        <p className="text-white/30 text-xs font-medium uppercase tracking-wider mb-2">Filosofia</p>
+        <p className="text-white/50 text-sm leading-relaxed italic">
+          "Sustentável &gt; perfeito. Longo prazo &gt; resultado rápido."
+        </p>
+      </div>
+
     </div>
   )
 }

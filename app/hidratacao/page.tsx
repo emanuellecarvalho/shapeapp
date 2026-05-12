@@ -3,6 +3,10 @@ import { useState, useEffect } from 'react'
 import { Droplets, Plus, Check } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { META_HIDRATACAO_ML } from '@/lib/dados'
+import { Card } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Progress } from '@/components/ui/progress'
+import { Badge } from '@/components/ui/badge'
 
 const OPCOES_ML = [150, 200, 300, 500]
 
@@ -14,15 +18,21 @@ export default function HidratacaoPage() {
   const [saved, setSaved] = useState(false)
   const hoje = new Date().toISOString().split('T')[0]
 
-  useEffect(() => { carregarDia() }, [])
-
-  const carregarDia = async () => {
-    const { data } = await supabase.from('hidratacao_log').select('ml_total, registros').eq('user_id', 'manu').eq('data', hoje).single()
-    if (data) {
-      setTotal((data as any).ml_total || 0)
-      setRegistros(((data as any).registros as Registro[]) || [])
+  useEffect(() => {
+    const carregar = async () => {
+      const { data } = await supabase
+        .from('hidratacao_log')
+        .select('ml_total, registros')
+        .eq('user_id', 'manu')
+        .eq('data', hoje)
+        .single()
+      if (data) {
+        setTotal((data as any).ml_total || 0)
+        setRegistros(((data as any).registros as Registro[]) || [])
+      }
     }
-  }
+    carregar()
+  }, [hoje])
 
   const adicionar = async (ml: number) => {
     const hora = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
@@ -31,13 +41,25 @@ export default function HidratacaoPage() {
     setTotal(novoTotal)
     setRegistros(novosRegistros)
 
-    const { data: existing } = await supabase.from('hidratacao_log').select('id').eq('user_id', 'manu').eq('data', hoje).single()
+    const { data: existing } = await supabase
+      .from('hidratacao_log')
+      .select('id')
+      .eq('user_id', 'manu')
+      .eq('data', hoje)
+      .single()
+
     if (existing) {
-      // @ts-ignore
-      await supabase.from('hidratacao_log').update({ ml_total: novoTotal, registros: novosRegistros } as any).eq('id' as any, (existing as any).id)
+      const id = (existing as any).id
+      await (supabase as any)
+        .from('hidratacao_log')
+        .update({ ml_total: novoTotal, registros: novosRegistros })
+        .eq('id', id)
     } else {
-      await supabase.from('hidratacao_log').insert({ user_id: 'manu', data: hoje, ml_total: novoTotal, registros: novosRegistros } as any)
+      await supabase
+        .from('hidratacao_log')
+        .insert({ user_id: 'manu', data: hoje, ml_total: novoTotal, registros: novosRegistros } as any)
     }
+
     setSaved(true)
     setTimeout(() => setSaved(false), 1500)
   }
@@ -50,13 +72,18 @@ export default function HidratacaoPage() {
     <div className="px-4 pt-8 pb-4">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-xl font-semibold">Hidratação</h1>
-        {saved && <div className="flex items-center gap-1 text-[#1D9E75] text-sm"><Check size={14} /> Salvo</div>}
+        {saved && (
+          <Badge variant="success" className="gap-1">
+            <Check size={12} /> Salvo
+          </Badge>
+        )}
       </div>
 
-      <div className="bg-[#1a1a1a] rounded-3xl p-6 border border-white/5 mb-5 flex flex-col items-center">
+      {/* Anel de progresso */}
+      <Card className="p-6 mb-5 flex flex-col items-center">
         <div className="relative w-40 h-40 mb-4">
           <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
-            <circle cx="50" cy="50" r="42" fill="none" stroke="#ffffff0a" strokeWidth="8" />
+            <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth="8" />
             <circle cx="50" cy="50" r="42" fill="none" stroke="#378ADD" strokeWidth="8"
               strokeDasharray={`${2 * Math.PI * 42}`}
               strokeDashoffset={`${2 * Math.PI * 42 * (1 - pct / 100)}`}
@@ -78,23 +105,29 @@ export default function HidratacaoPage() {
             <p className="text-white/40 text-xs">copos restantes</p>
           </div>
         </div>
-      </div>
+      </Card>
 
+      {/* Botões de adição */}
       <p className="text-white/40 text-xs font-medium uppercase tracking-wider mb-3">Adicionar</p>
       <div className="grid grid-cols-4 gap-2 mb-5">
         {OPCOES_ML.map(ml => (
-          <button key={ml} onClick={() => adicionar(ml)}
-            className="bg-[#1a1a1a] border border-white/10 rounded-2xl py-4 flex flex-col items-center gap-1.5 active:scale-95 transition-transform">
+          <Button
+            key={ml}
+            variant="outline"
+            className="h-auto py-4 flex-col gap-1.5"
+            onClick={() => adicionar(ml)}
+          >
             <Plus size={14} className="text-[#378ADD]" />
             <span className="text-sm font-medium">{ml}ml</span>
-          </button>
+          </Button>
         ))}
       </div>
 
+      {/* Histórico do dia */}
       {registros.length > 0 && (
         <>
           <p className="text-white/40 text-xs font-medium uppercase tracking-wider mb-3">Hoje</p>
-          <div className="bg-[#1a1a1a] rounded-2xl border border-white/5 overflow-hidden">
+          <Card className="overflow-hidden">
             {registros.slice().reverse().map((r, i) => (
               <div key={i} className="flex items-center justify-between px-4 py-3 border-b border-white/5 last:border-0">
                 <div className="flex items-center gap-3">
@@ -106,7 +139,7 @@ export default function HidratacaoPage() {
                 <span className="text-white/40 text-xs">{r.hora}</span>
               </div>
             ))}
-          </div>
+          </Card>
         </>
       )}
     </div>
